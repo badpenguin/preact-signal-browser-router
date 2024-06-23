@@ -1,0 +1,21 @@
+{
+  "name": "preact-signal-browser-router",
+  "version": "1.0.0",
+  "description": "A barebone hash and url router for browsers using preact+signals",
+  "main": "router.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "preact",
+    "router"
+  ],
+  "author": "Antonio Gallo",
+  "license": "MIT",
+  "dependencies": {
+    "@preact/signals": "^1.2.3",
+    "preact": "^10.22.0"
+  },
+  "private": false,
+  "homepage": "https://www.antoniogallo.it"
+}
