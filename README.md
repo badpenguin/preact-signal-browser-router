@@ -10,7 +10,7 @@ It is very simple.
   - "component", ofc its your component
 - as alternative to Route you can use your own component with just the "path" attribute 
 
-Example:
+Example using HTM library:
 ```jsx
 <${Router} prefix="/#" fallback=${PageNotFound}>
     <${Route} path="/" component=${PageLogin}/>
@@ -28,3 +28,6 @@ To switch URL you can use normal links or the **route()** function:
 <a class="btn" href="#/due/alfa/">TEST2</a>
 <button class="btn" onclick="${()=>{route('#/due/alfa/')}}">TEST2</button>
 ```
+
+For more info to use preact+htm+signal buildless, please see:
+https://github.com/badpenguin/buildless-pwa

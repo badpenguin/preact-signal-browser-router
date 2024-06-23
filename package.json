@@ -2,9 +2,13 @@
   "name": "preact-signal-browser-router",
   "version": "1.0.0",
   "description": "A barebone hash and url router for browsers using preact+signals",
-  "main": "router.js",
+  "type": "module",
+  "main": "dist/router.cjs.js",
+  "module": "dist/router.esm.js",
+  "browser": "dist/router.umd.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "preact",
@@ -17,5 +21,17 @@
     "preact": "^10.22.0"
   },
   "private": false,
-  "homepage": "https://www.antoniogallo.it"
+  "homepage": "https://www.antoniogallo.it",
+  "repository": {
+    "url": "https://github.com/badpenguin/preact-signal-browser-router"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.18.0"
+  }
 }
