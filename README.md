@@ -31,3 +31,10 @@ To switch URL you can use normal links or the **route()** function:
 
 For more info to use preact+htm+signal buildless, please see:
 https://github.com/badpenguin/buildless-pwa
+
+## Building
+
+```
+yarn install
+yarn build
+```
