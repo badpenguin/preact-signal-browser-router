@@ -10,6 +10,16 @@ It is very simple.
   - "component", ofc its your component
 - as alternative to Route you can use your own component with just the "path" attribute 
 
+## v2 additions
+
+2026-05-30: v2 keeps the original minimal API and adds the helpers already used by `test3.helecomedia.com`.
+
+- `route(path, params)` can receive an optional params object for small runtime navigation state.
+- `getRouterParams()` returns the params object passed to the last `route()` call.
+- `isCurrentRoute(path)` returns `true` when the current path matches the provided app path.
+- `Router` now normalizes children through Preact `toChildArray()`, so it works reliably with one child,
+  multiple children and nested arrays.
+
 Example using HTM library:
 ```jsx
 <${Router} prefix="/#" fallback=${PageNotFound}>
@@ -27,6 +37,12 @@ To switch URL you can use normal links or the **route()** function:
 ```
 <a class="btn" href="#/due/alfa/">TEST2</a>
 <button class="btn" onclick="${()=>{route('#/due/alfa/')}}">TEST2</button>
+<button class="btn" onclick="${()=>{route('/profile', {from: 'feed'})}}">Profile</button>
+```
+
+To read params after navigation:
+```jsx
+const params = getRouterParams();
 ```
 
 For more info to use preact+htm+signal buildless, please see:

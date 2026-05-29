@@ -1,8 +1,13 @@
 /**
  * preact-signal-browser-router by Antonio Gallo
+ *
+ * 2026-05-30: v2 allineata alla copia usata da test3.helecomedia.com.
+ * - toChildArray rende Router stabile anche quando Preact passa un singolo child o children annidati;
+ * - currentParams conserva piccoli dati runtime associati alla navigazione fatta via route();
+ * - isCurrentRoute() espone un helper minimale per stati attivi di menu/header senza duplicare logica nell'app.
  */
 import {signal} from '@preact/signals';
-import { h } from 'preact';
+import {h, toChildArray} from 'preact';
 
 const debug = true;
 
@@ -14,11 +19,15 @@ const getCurrentPath = function () {
 
 const currentPath = signal(getCurrentPath());
 
-
-
 const updatePath = () => {
 	currentPath.value = getCurrentPath();
 };
+
+let currentParams = {};
+
+const getRouterParams = function () {
+	return currentParams;
+}
 
 
 const matchPath = (path, route, prefix = '') => {
@@ -30,19 +39,29 @@ const matchPath = (path, route, prefix = '') => {
 };
 
 
-const Router = ({ children, fallback=null, prefix = '' }) => {
-	const	match = children.find(child => matchPath(currentPath.value, child.props.path, prefix));
-	debug && console.debug('* Router:', match ? '[path: '+ match.props.path+ ']' : '(NONE)' );
+const isCurrentRoute = (path) => {
+	path = '/' + path;
+	return (currentPath.value === path);
+}
+
+
+const Router = ({children, fallback = null, prefix = ''}) => {
+	const childArray = toChildArray(children);
+	const match = childArray.find(child => matchPath(currentPath.value, child.props.path, prefix));
+	debug && console.debug('* Router:', match ? '[path: ' + match.props.path + ']' : '(NONE)');
 	return match ? match : (fallback ? h(fallback) : null);
 };
 
 
-const Route = ({ component: Component }) => h(Component, {});
+//noinspection JSUnusedGlobalSymbols
+const Route = ({component: Component}) => h(Component, {});
 
 
 // Helper function to navigate
-const route = (path) => {
-	debug && console.debug('! route:', path);
+const route = (path, params) => {
+	params = params || {};
+	debug && console.debug('! route:', path, params);
+	currentParams = params;
 	window.history.pushState(null, null, path);
 	updatePath();
 };
@@ -63,4 +82,4 @@ document.addEventListener('click', (event) => {
 	}
 });
 
-export { Router, Route, route };
+export {Router, Route, route, getRouterParams, isCurrentRoute};
