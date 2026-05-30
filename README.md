@@ -33,11 +33,30 @@ Example using HTM library:
 <//>
 ```
 
-To switch URL you can use normal links or the **route()** function:
-```
+## Navigation
+
+To switch URL you can use normal links or the **route()** function.
+
+Relative links are intercepted automatically by the router:
+
+```html
+<a class="btn" href="/app/home/">Home</a>
 <a class="btn" href="#/due/alfa/">TEST2</a>
-<button class="btn" onclick="${()=>{route('#/due/alfa/')}}">TEST2</button>
-<button class="btn" onclick="${()=>{route('/profile', {from: 'feed'})}}">Profile</button>
+```
+
+The router listens for clicks on `a[href^="/"]`, calls `event.preventDefault()`
+and internally runs `route(href)`, so relative links such as `/app/home/` do not
+reload the page.
+
+Do not duplicate link navigation with both `href` and `onclick`. Use only
+`href` for normal internal links.
+
+Use **route()** for programmatic navigation, buttons, forms, or when you need
+runtime params:
+
+```jsx
+<button class="btn" onclick=${() => route('#/due/alfa/')}>TEST2</button>
+<button class="btn" onclick=${() => route('/profile', {from: 'feed'})}>Profile</button>
 ```
 
 To read params after navigation:
