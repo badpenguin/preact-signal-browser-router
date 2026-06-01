@@ -20,6 +20,27 @@ It is very simple.
 - `Router` now normalizes children through Preact `toChildArray()`, so it works reliably with one child,
   multiple children and nested arrays.
 
+## v2.2 additions
+
+2026-06-01: `Router` can optionally observe query string changes without using the query string for route matching.
+
+- `observeSearch={true}` makes the router re-render when `window.location.search` changes.
+- The route match still uses only the path/hash managed by the router, so `/app/home/?q=test` can still match `/home/`.
+- The matched child receives a `routerSearch` prop with the current query string, for example `?q=test`.
+- Default is `false`, so existing apps keep the old behavior.
+
+Example:
+```jsx
+function HomeRoute({routerSearch}) {
+    const q = new URLSearchParams(routerSearch).get('q') || '';
+    return html`<${HomePage} q=${q} />`;
+}
+
+<${Router} prefix="/app" fallback=${HomeRoute} observeSearch=${true}>
+    <${HomeRoute} path="/home/" />
+<//>
+```
+
 Example using HTM library:
 ```jsx
 <${Router} prefix="/#" fallback=${PageNotFound}>

@@ -5,6 +5,7 @@
  * - toChildArray rende Router stabile anche quando Preact passa un singolo child o children annidati;
  * - currentParams conserva piccoli dati runtime associati alla navigazione fatta via route();
  * - isCurrentRoute() espone un helper minimale per stati attivi di menu/header senza duplicare logica nell'app.
+ * - 2026-06-01: observeSearch abilita render su cambio query string senza cambiare il matching delle route.
  */
 import {signal} from '@preact/signals';
 import {h, toChildArray} from 'preact';
@@ -17,10 +18,16 @@ const getCurrentPath = function () {
 	return pathname + (hash ? '#' + hash : '');
 }
 
+const getCurrentSearch = function () {
+	return window.location.search;
+}
+
 const currentPath = signal(getCurrentPath());
+const currentSearch = signal(getCurrentSearch());
 
 const updatePath = () => {
 	currentPath.value = getCurrentPath();
+	currentSearch.value = getCurrentSearch();
 };
 
 let currentParams = {};
@@ -45,11 +52,17 @@ const isCurrentRoute = (path) => {
 }
 
 
-const Router = ({children, fallback = null, prefix = ''}) => {
+const Router = ({children, fallback = null, prefix = '', observeSearch = false}) => {
+	const search = observeSearch ? currentSearch.value : '';
+
 	const childArray = toChildArray(children);
 	const match = childArray.find(child => matchPath(currentPath.value, child.props.path, prefix));
 	debug && console.debug('* Router:', match ? '[path: ' + match.props.path + ']' : '(NONE)');
-	return match ? match : (fallback ? h(fallback) : null);
+	return match
+		? observeSearch
+			? h(match.type, {...match.props, routerSearch: search})
+			: match
+		: (fallback ? h(fallback) : null);
 };
 
 
