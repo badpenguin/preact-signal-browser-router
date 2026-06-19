@@ -1,3 +1,5 @@
+# preact-signal-browser-router [![](https://data.jsdelivr.com/v1/package/gh/badpenguin/preact-signal-browser-router/badge)](https://www.jsdelivr.com/package/gh/badpenguin/preact-signal-browser-router)
+
 Since `preact-router` gots deprecated and the suggested replacement `preact-iso` does not support hash navigation,
 I tried to create a very small and minimal router that will work in the browser.
 
@@ -9,6 +11,32 @@ It is very simple.
   - "path", it can be an exact matching, or you can use "*" as wildcard;
   - "component", ofc its your component
 - as alternative to Route you can use your own component with just the "path" attribute 
+
+## CDN via jsDelivr
+
+2026-06-19: the Git tag is `v3.0.1`, but jsDelivr exposes GitHub versions without the `v` prefix.
+Use the versioned CDN URL:
+
+```html
+<script type="importmap">
+{
+    "imports": {
+        "preact": "https://esm.sh/preact@10.26.9",
+        "@preact/signals": "https://esm.sh/@preact/signals@2.0.1?deps=preact@10.26.9"
+    }
+}
+</script>
+<script type="module">
+    import {
+        Router,
+        route,
+        routeReplace,
+        routeBackWithoutHash,
+        getRouterParams,
+        isCurrentRoute
+    } from 'https://cdn.jsdelivr.net/gh/badpenguin/preact-signal-browser-router@3.0.1/router.js';
+</script>
+```
 
 ## v2 additions
 
