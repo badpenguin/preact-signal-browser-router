@@ -38,6 +38,212 @@ It is very simple.
 - Signals v2 can defer DOM updates, so tests or code that inspects DOM immediately after `route()` may need to wait for Preact rendering.
 - Hash routing behavior is unchanged in v2.3.0.
 
+## v3.0 additions
+
+2026-06-19: v3 adds History API + anchor-hash support without removing the original hash-router behavior.
+
+The important distinction is that `#something` can mean two different things in browser apps:
+
+- **hash as route**: `/#/courses/intro/` means "show the courses intro route";
+- **hash as anchor**: `/app/course/cucito/#comments` means "show the course route and scroll to the comments element".
+
+This router originally existed because hash routing was still useful. For that reason v3 keeps the old behavior as the default.
+If you already use `prefix="/#"` or routes like `#/page/`, you do not have to change anything.
+
+### `hashMode`
+
+`hashMode` decides whether the hash participates in route matching.
+
+```jsx
+<${Router} hashMode="route" />
+```
+
+`route` is the default mode. The current path includes the hash, so an URL like `/#/profile/`
+can match routes configured for hash navigation.
+
+```jsx
+<${Router} hashMode="anchor" />
+```
+
+`anchor` mode is for apps that use normal paths with History API and want the hash to behave like
+a browser anchor. In this mode `/app/home/#start` can still match a route such as `/home/`.
+The hash remains in the URL, but it is ignored only for route matching and active-route checks.
+
+Use `hashMode="anchor"` when:
+
+- your app lives under a real path such as `/app/`;
+- routes are normal paths such as `/home/`, `/course/cucito/`, `/post/10/`;
+- hashes point to DOM elements such as `#comments`, `#lesson-files`, `#start`;
+- you want `route('/app/post/10/#comments')` to render `/post/10/` and scroll to `id="comments"`.
+
+Keep the default `hashMode="route"` when:
+
+- your URLs are hash routes such as `/#/home/`;
+- you use `prefix="/#"` or nested hash router prefixes;
+- the hash itself identifies the screen to render.
+
+### Anchor scrolling
+
+When `hashMode="anchor"`, `route()` and `routeReplace()` call `history.pushState()` or
+`history.replaceState()`. Browsers do not automatically perform native anchor scrolling after
+those History API calls, so v3 adds explicit hash scrolling.
+
+If the target exists immediately, the router calls `scrollIntoView()`:
+
+```html
+<section id="comments">...</section>
+```
+
+```jsx
+route('/app/post/10/#comments');
+```
+
+If the route renders asynchronously, the target may not exist at the moment `route()` runs.
+For that case use `observeMissingHashTargets={true}`.
+
+```jsx
+<${Router}
+    prefix="/app"
+    hashMode="anchor"
+    observeMissingHashTargets=${true}
+>
+    <${PostRoute} path="/post/*" />
+<//>
+```
+
+With that option enabled, the router waits for the missing element through `MutationObserver`
+and scrolls when the element appears. This is useful for views that wait for API data, lazy UI,
+or conditional sections.
+
+### Back and forward navigation
+
+Browsers may restore scroll position during back/forward navigation. If the router also scrolls
+to the hash during `popstate`, it can fight the browser scroll restoration.
+
+Use `scrollHashOnPopState={false}` when you prefer browser restoration for back/forward:
+
+```jsx
+<${Router}
+    prefix="/app"
+    hashMode="anchor"
+    scrollHashOnPopState=${false}
+    observeMissingHashTargets=${true}
+>
+    <${HomeRoute} path="/home/" />
+    <${PostRoute} path="/post/*" />
+<//>
+```
+
+Forward navigation through `route('/path/#target')` still scrolls to the anchor. The option only
+controls the `popstate` case.
+
+### `routeReplace()`
+
+`routeReplace(path, params)` behaves like `route(path, params)`, but uses `history.replaceState()`
+instead of `history.pushState()`.
+
+Use it when a temporary screen should not remain in browser history:
+
+```jsx
+import {routeReplace} from 'preact-signal-browser-router';
+
+function closeEditor(postId, commentId) {
+    routeReplace(`/app/post/${postId}/#comment-${commentId}`);
+}
+```
+
+This is useful for flows such as:
+
+- editor -> detail page;
+- login step -> final destination;
+- modal-like route -> parent route.
+
+### `routeBackWithoutHash()`
+
+`routeBackWithoutHash()` is a small explicit helper for "Back" buttons:
+
+```jsx
+import {routeBackWithoutHash} from 'preact-signal-browser-router';
+
+function BackButton() {
+    return html`
+        <button type="button" onClick=${routeBackWithoutHash}>
+            Back
+        </button>
+    `;
+}
+```
+
+The helper delegates to `window.history.back()`. Hash scrolling on the resulting `popstate`
+still follows the mounted Router configuration, especially `scrollHashOnPopState`.
+
+### Active route checks
+
+`isCurrentRoute(path)` keeps the default hash-as-route behavior. In an anchor-hash app, either call
+it after a Router with `hashMode="anchor"` has mounted, or pass the mode explicitly:
+
+```jsx
+import {isCurrentRoute} from 'preact-signal-browser-router';
+
+const active = isCurrentRoute('/post/10/', {
+    hashMode: 'anchor'
+});
+```
+
+With the explicit mode, `/app/post/10/#comments` can be considered active for `/post/10/`.
+
+### Complete examples
+
+Classic hash router, unchanged from v2:
+
+```jsx
+<${Router} prefix="/#" fallback=${PageNotFound}>
+    <${Route} path="/" component=${PageLogin}/>
+    <${Route} path="/home/" component=${PageHome}/>
+    <${Route} path="/course/*" component=${PageCourse}/>
+<//>
+```
+
+History API app with anchor hashes:
+
+```jsx
+function PostRoute({routerSearch}) {
+    const search = new URLSearchParams(routerSearch);
+    const highlight = search.get('highlight') || '';
+
+    return html`
+        <${PostView} highlight=${highlight} />
+    `;
+}
+
+<${Router}
+    prefix="/app"
+    fallback=${HomeRoute}
+    observeSearch=${true}
+    hashMode="anchor"
+    scrollHashOnPopState=${false}
+    observeMissingHashTargets=${true}
+>
+    <${HomeRoute} path="/home/" />
+    <${PostRoute} path="/post/*" />
+<//>
+```
+
+Programmatic navigation to an async-rendered comment:
+
+```jsx
+import {route} from 'preact-signal-browser-router';
+
+function openComment(postId, commentId) {
+    route(`/app/post/${postId}/#comment-${commentId}`, {
+        from: 'notification'
+    });
+}
+```
+
+The route renders `/post/*`; the hash is kept in the URL and, with
+`observeMissingHashTargets={true}`, the router scrolls when `id="comment-123"` appears.
+
 Example:
 ```jsx
 function HomeRoute({routerSearch}) {
