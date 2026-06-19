@@ -1,6 +1,6 @@
 {
   "name": "preact-signal-browser-router",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A barebone hash and url router for browsers using preact+signals",
   "type": "module",
   "main": "dist/router.cjs.js",

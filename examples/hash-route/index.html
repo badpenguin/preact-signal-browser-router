@@ -8,7 +8,7 @@
 	{
 		"imports": {
 			"preact": "https://esm.sh/preact@10.26.9",
-			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1"
+			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1?deps=preact@10.26.9"
 		}
 	}
 	</script>
@@ -96,6 +96,12 @@
 		.demo-nav a:focus {
 			border-color: #2563eb;
 			outline: none;
+		}
+
+		.demo-nav a[aria-current="page"] {
+			border-color: #2563eb;
+			background: #dbeafe;
+			color: #1d4ed8;
 		}
 
 		.demo-panel {
@@ -187,10 +193,13 @@
 			window.history.replaceState(null, '', `${basePath}/#/`);
 		}
 
-		const {Router, Route} = await import('../../dist/router.esm.js');
+		const {Router} = await import('../../router.js');
 		const routePrefix = `${basePath}/#`;
 		const linkTo = function (routePath) {
 			return `${routePrefix}${routePath}`;
+		};
+		const isActiveHashRoute = function (routePath) {
+			return (window.location.hash.slice(1) || '/') === routePath;
 		};
 
 		function DemoHeader() {
@@ -205,9 +214,18 @@
 
 		function DemoNav() {
 			return h('nav', {class: 'demo-nav', 'aria-label': 'Hash route demo navigation'}, [
-				h('a', {href: linkTo('/')}, 'Home'),
-				h('a', {href: linkTo('/courses/')}, 'Courses'),
-				h('a', {href: linkTo('/courses/intro/')}, 'Course detail')
+				h('a', {
+					href: linkTo('/'),
+					'aria-current': isActiveHashRoute('/') ? 'page' : null
+				}, 'Home'),
+				h('a', {
+					href: linkTo('/courses/'),
+					'aria-current': isActiveHashRoute('/courses/') ? 'page' : null
+				}, 'Courses'),
+				h('a', {
+					href: linkTo('/courses/intro/'),
+					'aria-current': isActiveHashRoute('/courses/intro/') ? 'page' : null
+				}, 'Course detail')
 			]);
 		}
 
@@ -257,9 +275,9 @@
 
 		function App() {
 			return h(Router, {prefix: routePrefix, hashMode: 'route', fallback: NotFoundPage}, [
-				h(Route, {path: '/', component: HomePage}),
-				h(Route, {path: '/courses/', component: CoursesPage}),
-				h(Route, {path: '/courses/intro/', component: CourseDetailPage})
+				h(HomePage, {path: '/'}),
+				h(CoursesPage, {path: '/courses/'}),
+				h(CourseDetailPage, {path: '/courses/intro/'})
 			]);
 		}
 

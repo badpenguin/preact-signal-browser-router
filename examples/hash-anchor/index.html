@@ -8,7 +8,7 @@
 	{
 		"imports": {
 			"preact": "https://esm.sh/preact@10.26.9",
-			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1"
+			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1?deps=preact@10.26.9"
 		}
 	}
 	</script>
@@ -108,6 +108,12 @@
 			outline: none;
 		}
 
+		.demo-nav a[aria-current="page"] {
+			border-color: #16a34a;
+			background: #dcfce7;
+			color: #166534;
+		}
+
 		.demo-panel,
 		.demo-section {
 			border: 1px solid #d6d0c8;
@@ -172,6 +178,87 @@
 			margin-bottom: 4px;
 		}
 
+		.demo-home-actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 18px;
+		}
+
+		.demo-home-actions a,
+		.demo-action-row a,
+		.demo-action-row button {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 38px;
+			border: 1px solid #d6d0c8;
+			border-radius: 8px;
+			background: #fbfaf8;
+			padding: 0 12px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 700;
+			color: inherit;
+			cursor: pointer;
+		}
+
+		.demo-home-actions a:hover,
+		.demo-home-actions a:focus,
+		.demo-action-row a:hover,
+		.demo-action-row a:focus,
+		.demo-action-row button:hover,
+		.demo-action-row button:focus {
+			border-color: #16a34a;
+			outline: none;
+		}
+
+		.demo-action-list {
+			display: grid;
+			gap: 12px;
+			margin-top: 18px;
+		}
+
+		.demo-action-row {
+			display: grid;
+			grid-template-columns: minmax(220px, 280px) 1fr;
+			align-items: center;
+			gap: 14px;
+			border: 1px solid #e5e0d8;
+			border-radius: 8px;
+			background: #fbfaf8;
+			padding: 12px;
+		}
+
+		.demo-action-row p {
+			margin: 0;
+			color: #667085;
+			line-height: 1.55;
+		}
+
+		.demo-api-grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 14px;
+			margin-top: 22px;
+		}
+
+		.demo-api-item {
+			border: 1px solid #e5e0d8;
+			border-radius: 8px;
+			background: #fbfaf8;
+			padding: 16px;
+		}
+
+		.demo-api-item strong {
+			display: block;
+			margin-bottom: 6px;
+		}
+
+		.demo-api-item p {
+			margin: 0;
+		}
+
 		@media (max-width: 720px) {
 			.demo-shell {
 				width: min(100% - 24px, 1040px);
@@ -186,12 +273,21 @@
 				display: inline-flex;
 				margin-top: 16px;
 			}
+
+			.demo-api-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.demo-action-row {
+				grid-template-columns: 1fr;
+			}
 		}
 	</style>
 </head>
-<body>
+<body id="start">
 	<div id="app"></div>
 	<script type="module">
+		import {signal} from '@preact/signals';
 		import {h, render} from 'preact';
 
 		/*
@@ -202,10 +298,58 @@
 			.replace(/\/(lesson|about)\/?$/, '')
 			.replace(/\/$/, '');
 
-		const {Router, Route} = await import('../../dist/router.esm.js');
+		const {Router, route, routeReplace, routeBackWithoutHash, getRouterParams} = await import('../../router.js');
+		const delayedTargetVisible = signal(false);
 		const linkTo = function (routePath) {
 			return `${basePath}${routePath}`;
 		};
+		const getDemoPath = function () {
+			return window.location.pathname.slice(basePath.length) || '/';
+		};
+		const isActivePath = function (routePath) {
+			return getDemoPath() === routePath;
+		};
+		const isActiveHash = function (hash) {
+			return window.location.hash === hash;
+		};
+
+		function openCommentsWithRoute() {
+			/*
+			 * 2026-06-19: demo esplicita di route(path, params), con params visibili nella stessa pagina.
+			 */
+			delayedTargetVisible.value = false;
+			route(linkTo('/lesson/?highlight=programmatic-route#comments'), {
+				from: 'route-button',
+				target: 'comments'
+			});
+		}
+
+		function replaceToDownloads() {
+			/*
+			 * 2026-06-19: routeReplace sostituisce la entry corrente e aggiorna comunque route, search e hash.
+			 */
+			delayedTargetVisible.value = false;
+			routeReplace(linkTo('/lesson/?highlight=replace#downloads'), {
+				from: 'replace-button',
+				target: 'downloads'
+			});
+		}
+
+		function openDelayedTarget() {
+			/*
+			 * 2026-06-19: observeMissingHashTargets aspetta che #delayed entri nel DOM prima di scrollare.
+			 */
+			delayedTargetVisible.value = false;
+			route(linkTo('/lesson/?highlight=delayed#delayed'), {
+				from: 'delayed-button',
+				target: 'delayed'
+			});
+			window.setTimeout(showDelayedTarget, 700);
+		}
+
+		function showDelayedTarget() {
+			delayedTargetVisible.value = true;
+		}
 
 		function DemoHeader() {
 			return h('header', {class: 'demo-header'}, [
@@ -219,10 +363,26 @@
 
 		function DemoNav() {
 			return h('nav', {class: 'demo-nav', 'aria-label': 'Anchor hash demo navigation'}, [
-				h('a', {href: linkTo('/')}, 'Home'),
-				h('a', {href: linkTo('/lesson/')}, 'Lesson'),
-				h('a', {href: linkTo('/lesson/#comments')}, 'Lesson comments'),
-				h('a', {href: linkTo('/about/')}, 'About')
+				h('a', {
+					href: linkTo('/'),
+					'aria-current': isActivePath('/') ? 'page' : null
+				}, 'Home'),
+				h('a', {
+					href: linkTo('/lesson/#start'),
+					'aria-current': isActivePath('/lesson/') && isActiveHash('#start') ? 'page' : null
+				}, 'Lesson start'),
+				h('a', {
+					href: linkTo('/lesson/#comments'),
+					'aria-current': isActivePath('/lesson/') && isActiveHash('#comments') ? 'page' : null
+				}, 'Lesson comments'),
+				h('a', {
+					href: linkTo('/lesson/#downloads'),
+					'aria-current': isActivePath('/lesson/') && isActiveHash('#downloads') ? 'page' : null
+				}, 'Lesson downloads'),
+				h('a', {
+					href: linkTo('/about/?from=nav'),
+					'aria-current': isActivePath('/about/') ? 'page' : null
+				}, 'About + query')
 			]);
 		}
 
@@ -234,20 +394,81 @@
 			]);
 		}
 
-		function HomePage() {
+		function HomePage({routerSearch}) {
 			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
 				h('h2', {}, 'Home route'),
-				h('p', {}, 'Open the lesson and then the comments link. The URL hash stays visible, but the route still matches /lesson/.'),
-				h('code', {class: 'demo-url'}, window.location.href)
+				h('p', {}, 'Start from the lesson page to try the advanced hashMode="anchor" examples: scroll anchors, observed query string, programmatic route(), routeReplace(), params and delayed targets.'),
+				h('p', {}, `Observed search: ${routerSearch || '(empty)'}`),
+				h('code', {class: 'demo-url'}, window.location.href),
+				h('div', {class: 'demo-home-actions'}, [
+					h('a', {href: linkTo('/lesson/#start')}, 'Open lesson examples')
+				])
 			]));
 		}
 
-		function LessonPage() {
+		function LessonPage({routerSearch}) {
+			const searchParams = new URLSearchParams(routerSearch || '');
+			const highlight = searchParams.get('highlight') || 'none';
+			const routerParams = getRouterParams();
+			const paramsLabel = Object.keys(routerParams).length
+				? JSON.stringify(routerParams)
+				: '(empty)';
+
 			return h(Layout, {}, [
-				h('section', {class: 'demo-panel'}, [
+				h('section', {class: 'demo-panel demo-section'}, [
 					h('h2', {}, 'Lesson route'),
 					h('p', {}, 'This page is rendered by the /lesson/ route. Adding #comments keeps this same route active.'),
+					h('p', {}, `Observed search highlight: ${highlight}`),
+					h('p', {}, `Router params: ${paramsLabel}`),
 					h('code', {class: 'demo-url'}, window.location.href)
+				]),
+				h('section', {class: 'demo-action-list', 'aria-label': 'Anchor mode actions'}, [
+					h('div', {class: 'demo-action-row'}, [
+						h('a', {href: linkTo('/lesson/#start')}, 'Lesson start'),
+						h('p', {}, 'Scrolls back to the body #start anchor, so you can return to the top after visiting lower anchors.')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('a', {href: linkTo('/lesson/?highlight=comments#comments')}, 'Query + comments'),
+						h('p', {}, 'Changes the query string and scrolls to #comments while the matched route remains /lesson/.')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('a', {href: linkTo('/lesson/?highlight=downloads#downloads')}, 'Query + downloads'),
+						h('p', {}, 'Uses a different anchor on the same route and shows the updated routerSearch highlight value.')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('button', {type: 'button', onClick: openCommentsWithRoute}, 'route() to comments'),
+						h('p', {}, 'Calls route(path, params), updates the URL, scrolls to #comments and exposes params through getRouterParams().')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('button', {type: 'button', onClick: replaceToDownloads}, 'routeReplace() to downloads'),
+						h('p', {}, 'Calls routeReplace(path, params), updates the same route and replaces the current history entry.')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('button', {type: 'button', onClick: openDelayedTarget}, 'route() to delayed target'),
+						h('p', {}, 'Navigates to #delayed before the element exists; observeMissingHashTargets scrolls when it appears.')
+					]),
+					h('div', {class: 'demo-action-row'}, [
+						h('button', {type: 'button', onClick: routeBackWithoutHash}, 'routeBackWithoutHash()'),
+						h('p', {}, 'Delegates to browser back navigation; useful for back buttons where the router controls hash scroll behavior.')
+					])
+				]),
+				h('section', {class: 'demo-api-grid', 'aria-label': 'Router API state'}, [
+					h('div', {class: 'demo-api-item'}, [
+						h('strong', {}, 'observeSearch'),
+						h('p', {}, `routerSearch prop: ${routerSearch || '(empty)'}`)
+					]),
+					h('div', {class: 'demo-api-item'}, [
+						h('strong', {}, 'getRouterParams()'),
+						h('p', {}, paramsLabel)
+					]),
+					h('div', {class: 'demo-api-item'}, [
+						h('strong', {}, 'hashMode="anchor"'),
+						h('p', {}, 'The hash scrolls to a DOM id but does not change the matched route.')
+					]),
+					h('div', {class: 'demo-api-item'}, [
+						h('strong', {}, 'observeMissingHashTargets'),
+						h('p', {}, delayedTargetVisible.value ? '#delayed is now rendered' : '#delayed is not in the DOM yet')
+					])
 				]),
 				h('div', {class: 'demo-spacer', 'aria-hidden': 'true'}, 'Scroll area'),
 				h('section', {id: 'comments', class: 'demo-section'}, [
@@ -263,14 +484,28 @@
 							'The route is still /lesson/, even with #comments in the address bar.'
 						])
 					])
-				])
+				]),
+				h('div', {class: 'demo-spacer', 'aria-hidden': 'true'}, 'Scroll area'),
+				h('section', {id: 'downloads', class: 'demo-section'}, [
+					h('h2', {}, 'Downloads anchor'),
+					h('p', {}, 'This second target shows that different hashes scroll within the same matched route.'),
+					h('code', {class: 'demo-url'}, 'Matched route remains /lesson/')
+				]),
+				delayedTargetVisible.value
+					? h('section', {id: 'delayed', class: 'demo-section'}, [
+						h('h2', {}, 'Delayed target'),
+						h('p', {}, 'This section was inserted after navigation, then observeMissingHashTargets scrolled here.'),
+						h('code', {class: 'demo-url'}, 'Rendered after route() requested #delayed')
+					])
+					: null
 			]);
 		}
 
-		function AboutPage() {
+		function AboutPage({routerSearch}) {
 			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
 				h('h2', {}, 'About route'),
 				h('p', {}, 'This route has no anchor target. It demonstrates that normal path navigation keeps working in anchor mode.'),
+				h('p', {}, `Observed search: ${routerSearch || '(empty)'}`),
 				h('code', {class: 'demo-url'}, window.location.href)
 			]));
 		}
@@ -288,11 +523,12 @@
 				prefix: basePath,
 				hashMode: 'anchor',
 				fallback: NotFoundPage,
+				observeSearch: true,
 				observeMissingHashTargets: true
 			}, [
-				h(Route, {path: '/', component: HomePage}),
-				h(Route, {path: '/lesson/', component: LessonPage}),
-				h(Route, {path: '/about/', component: AboutPage})
+				h(HomePage, {path: '/'}),
+				h(LessonPage, {path: '/lesson/'}),
+				h(AboutPage, {path: '/about/'})
 			]);
 		}
 

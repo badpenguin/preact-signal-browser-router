@@ -244,6 +244,10 @@ function openComment(postId, commentId) {
 The route renders `/post/*`; the hash is kept in the URL and, with
 `observeMissingHashTargets={true}`, the router scrolls when `id="comment-123"` appears.
 
+## v3.0.1 additions
+
+2026-06-19: v3.0.1 adds GitHub Pages examples for both `hashMode` variants.
+
 ### GitHub Pages demos
 
 2026-06-19: this repository includes two buildless examples that can be published through GitHub Pages:
