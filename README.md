@@ -38,6 +38,9 @@ Use the versioned CDN URL:
 </script>
 ```
 
+For a buildless single-file Preact + HTM + Signals bundle, see
+[preact-htm-signals-standalone](https://github.com/badpenguin/preact-htm-signals-standalone).
+
 ## v2 additions
 
 2026-05-30: v2 keeps the original minimal API and adds the helpers already used by `test3.helecomedia.com`.
