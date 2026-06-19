@@ -29,6 +29,15 @@ It is very simple.
 - The matched child receives a `routerSearch` prop with the current query string, for example `?q=test`.
 - Default is `false`, so existing apps keep the old behavior.
 
+## v2.3 additions
+
+2026-06-19: v2.3 updates dependencies for Preact Signals v2 without changing router behavior.
+
+- `@preact/signals` now uses the `^2.0.0` range.
+- `preact` now requires `>=10.25.0`, matching the Signals v2 peer dependency.
+- Signals v2 can defer DOM updates, so tests or code that inspects DOM immediately after `route()` may need to wait for Preact rendering.
+- Hash routing behavior is unchanged in v2.3.0.
+
 Example:
 ```jsx
 function HomeRoute({routerSearch}) {
