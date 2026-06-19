@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>hashMode anchor example</title>
+	<script type="importmap">
+	{
+		"imports": {
+			"preact": "https://esm.sh/preact@10.26.9",
+			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1"
+		}
+	}
+	</script>
+	<style>
+		:root {
+			color-scheme: light;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			background: #f6f3ef;
+			color: #1f2933;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+		}
+
+		a {
+			color: inherit;
+		}
+
+		.demo-shell {
+			width: min(1040px, calc(100% - 32px));
+			margin: 0 auto;
+			padding: 32px 0 80px;
+		}
+
+		.demo-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 24px;
+			margin-bottom: 24px;
+		}
+
+		.demo-title {
+			margin: 0 0 8px;
+			font-size: clamp(30px, 5vw, 52px);
+			line-height: 1.05;
+		}
+
+		.demo-intro {
+			max-width: 680px;
+			margin: 0;
+			color: #667085;
+			font-size: 17px;
+			line-height: 1.6;
+		}
+
+		.demo-badge {
+			flex: 0 0 auto;
+			border: 1px solid #bbf7d0;
+			background: #f0fdf4;
+			color: #15803d;
+			border-radius: 8px;
+			padding: 10px 12px;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.demo-nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			margin-bottom: 24px;
+			padding: 12px 0;
+			background: rgba(246, 243, 239, 0.92);
+			backdrop-filter: blur(10px);
+		}
+
+		.demo-nav a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 42px;
+			border: 1px solid #d6d0c8;
+			border-radius: 8px;
+			background: #ffffff;
+			padding: 0 14px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.demo-nav a:hover,
+		.demo-nav a:focus {
+			border-color: #16a34a;
+			outline: none;
+		}
+
+		.demo-panel,
+		.demo-section {
+			border: 1px solid #d6d0c8;
+			border-radius: 8px;
+			background: #ffffff;
+			box-shadow: 0 20px 50px rgba(31, 41, 51, 0.08);
+			padding: 24px;
+		}
+
+		.demo-panel h2,
+		.demo-section h2 {
+			margin: 0 0 12px;
+			font-size: 26px;
+			line-height: 1.2;
+		}
+
+		.demo-panel p,
+		.demo-section p {
+			margin: 0 0 16px;
+			color: #667085;
+			line-height: 1.65;
+		}
+
+		.demo-url {
+			display: block;
+			width: 100%;
+			overflow-x: auto;
+			border: 1px solid #d6d0c8;
+			border-radius: 8px;
+			background: #fbfaf8;
+			padding: 12px;
+			color: #1f2933;
+			font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		}
+
+		.demo-spacer {
+			height: 58vh;
+			display: grid;
+			place-items: center;
+			color: #667085;
+		}
+
+		.demo-section {
+			scroll-margin-top: 88px;
+		}
+
+		.demo-comments {
+			display: grid;
+			gap: 12px;
+			margin-top: 18px;
+		}
+
+		.demo-comment {
+			border: 1px solid #e5e0d8;
+			border-radius: 8px;
+			background: #fbfaf8;
+			padding: 14px;
+		}
+
+		.demo-comment strong {
+			display: block;
+			margin-bottom: 4px;
+		}
+
+		@media (max-width: 720px) {
+			.demo-shell {
+				width: min(100% - 24px, 1040px);
+				padding: 24px 0 64px;
+			}
+
+			.demo-header {
+				display: block;
+			}
+
+			.demo-badge {
+				display: inline-flex;
+				margin-top: 16px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id="app"></div>
+	<script type="module">
+		import {h, render} from 'preact';
+
+		/*
+		 * 2026-06-19: l'esempio usa path reali e hash come ancora.
+		 * Su GitHub Pages il link pubblico resta l'index della demo; le route profonde funzionano durante la navigazione client-side.
+		 */
+		const basePath = window.location.pathname
+			.replace(/\/(lesson|about)\/?$/, '')
+			.replace(/\/$/, '');
+
+		const {Router, Route} = await import('../../dist/router.esm.js');
+		const linkTo = function (routePath) {
+			return `${basePath}${routePath}`;
+		};
+
+		function DemoHeader() {
+			return h('header', {class: 'demo-header'}, [
+				h('div', {}, [
+					h('h1', {class: 'demo-title'}, 'hashMode anchor'),
+					h('p', {class: 'demo-intro'}, 'This demo uses normal paths for route matching and keeps the hash available for scrolling to DOM anchors.')
+				]),
+				h('div', {class: 'demo-badge'}, 'Hash as anchor')
+			]);
+		}
+
+		function DemoNav() {
+			return h('nav', {class: 'demo-nav', 'aria-label': 'Anchor hash demo navigation'}, [
+				h('a', {href: linkTo('/')}, 'Home'),
+				h('a', {href: linkTo('/lesson/')}, 'Lesson'),
+				h('a', {href: linkTo('/lesson/#comments')}, 'Lesson comments'),
+				h('a', {href: linkTo('/about/')}, 'About')
+			]);
+		}
+
+		function Layout({children}) {
+			return h('main', {class: 'demo-shell'}, [
+				h(DemoHeader),
+				h(DemoNav),
+				children
+			]);
+		}
+
+		function HomePage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Home route'),
+				h('p', {}, 'Open the lesson and then the comments link. The URL hash stays visible, but the route still matches /lesson/.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function LessonPage() {
+			return h(Layout, {}, [
+				h('section', {class: 'demo-panel'}, [
+					h('h2', {}, 'Lesson route'),
+					h('p', {}, 'This page is rendered by the /lesson/ route. Adding #comments keeps this same route active.'),
+					h('code', {class: 'demo-url'}, window.location.href)
+				]),
+				h('div', {class: 'demo-spacer', 'aria-hidden': 'true'}, 'Scroll area'),
+				h('section', {id: 'comments', class: 'demo-section'}, [
+					h('h2', {}, 'Comments anchor'),
+					h('p', {}, 'The router ignored #comments for matching and used it only as a scroll target.'),
+					h('div', {class: 'demo-comments'}, [
+						h('article', {class: 'demo-comment'}, [
+							h('strong', {}, 'Marta'),
+							'The current page did not reload while moving to this anchor.'
+						]),
+						h('article', {class: 'demo-comment'}, [
+							h('strong', {}, 'Luca'),
+							'The route is still /lesson/, even with #comments in the address bar.'
+						])
+					])
+				])
+			]);
+		}
+
+		function AboutPage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'About route'),
+				h('p', {}, 'This route has no anchor target. It demonstrates that normal path navigation keeps working in anchor mode.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function NotFoundPage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Route not found'),
+				h('p', {}, 'The current path does not match any configured demo route.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function App() {
+			return h(Router, {
+				prefix: basePath,
+				hashMode: 'anchor',
+				fallback: NotFoundPage,
+				observeMissingHashTargets: true
+			}, [
+				h(Route, {path: '/', component: HomePage}),
+				h(Route, {path: '/lesson/', component: LessonPage}),
+				h(Route, {path: '/about/', component: AboutPage})
+			]);
+		}
+
+		render(h(App), document.getElementById('app'));
+	</script>
+</body>
+</html>

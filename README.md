@@ -244,6 +244,16 @@ function openComment(postId, commentId) {
 The route renders `/post/*`; the hash is kept in the URL and, with
 `observeMissingHashTargets={true}`, the router scrolls when `id="comment-123"` appears.
 
+### GitHub Pages demos
+
+2026-06-19: this repository includes two buildless examples that can be published through GitHub Pages:
+
+- [hashMode route](https://badpenguin.github.io/preact-signal-browser-router/examples/hash-route/)
+- [hashMode anchor](https://badpenguin.github.io/preact-signal-browser-router/examples/hash-anchor/)
+
+The `hashMode="anchor"` demo uses client-side History API navigation. Open the linked demo index first,
+then use the in-page navigation so GitHub Pages does not need a server-side SPA rewrite.
+
 Example:
 ```jsx
 function HomeRoute({routerSearch}) {

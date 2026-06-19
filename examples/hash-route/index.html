@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>hashMode route example</title>
+	<script type="importmap">
+	{
+		"imports": {
+			"preact": "https://esm.sh/preact@10.26.9",
+			"@preact/signals": "https://esm.sh/@preact/signals@2.0.1"
+		}
+	}
+	</script>
+	<style>
+		:root {
+			color-scheme: light;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			background: #f5f7fb;
+			color: #182033;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+		}
+
+		a {
+			color: inherit;
+		}
+
+		.demo-shell {
+			width: min(1040px, calc(100% - 32px));
+			margin: 0 auto;
+			padding: 32px 0;
+		}
+
+		.demo-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 24px;
+			margin-bottom: 24px;
+		}
+
+		.demo-title {
+			margin: 0 0 8px;
+			font-size: clamp(30px, 5vw, 52px);
+			line-height: 1.05;
+		}
+
+		.demo-intro {
+			max-width: 650px;
+			margin: 0;
+			color: #566078;
+			font-size: 17px;
+			line-height: 1.6;
+		}
+
+		.demo-badge {
+			flex: 0 0 auto;
+			border: 1px solid #bfdbfe;
+			background: #eff6ff;
+			color: #1d4ed8;
+			border-radius: 8px;
+			padding: 10px 12px;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.demo-nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-bottom: 24px;
+		}
+
+		.demo-nav a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 42px;
+			border: 1px solid #d5dbe7;
+			border-radius: 8px;
+			background: #ffffff;
+			padding: 0 14px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.demo-nav a:hover,
+		.demo-nav a:focus {
+			border-color: #2563eb;
+			outline: none;
+		}
+
+		.demo-panel {
+			border: 1px solid #d5dbe7;
+			border-radius: 8px;
+			background: #ffffff;
+			box-shadow: 0 20px 50px rgba(24, 32, 51, 0.08);
+			padding: 24px;
+		}
+
+		.demo-panel h2 {
+			margin: 0 0 12px;
+			font-size: 26px;
+			line-height: 1.2;
+		}
+
+		.demo-panel p {
+			margin: 0 0 16px;
+			color: #566078;
+			line-height: 1.65;
+		}
+
+		.demo-url {
+			display: block;
+			width: 100%;
+			overflow-x: auto;
+			border: 1px solid #d5dbe7;
+			border-radius: 8px;
+			background: #f8fafc;
+			padding: 12px;
+			color: #1f2937;
+			font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		}
+
+		.demo-list {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 14px;
+			margin: 22px 0 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.demo-list li {
+			border: 1px solid #d5dbe7;
+			border-radius: 8px;
+			padding: 16px;
+			background: #fbfdff;
+		}
+
+		.demo-list strong {
+			display: block;
+			margin-bottom: 6px;
+		}
+
+		@media (max-width: 720px) {
+			.demo-shell {
+				width: min(100% - 24px, 1040px);
+				padding: 24px 0;
+			}
+
+			.demo-header {
+				display: block;
+			}
+
+			.demo-badge {
+				display: inline-flex;
+				margin-top: 16px;
+			}
+
+			.demo-list {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id="app"></div>
+	<script type="module">
+		import {h, render} from 'preact';
+
+		/*
+		 * 2026-06-19: l'esempio deve funzionare sia da GitHub Pages sia da un server locale.
+		 * Il prefisso viene derivato dalla pagina corrente, senza hardcodare il nome repository.
+		 */
+		const basePath = window.location.pathname.replace(/\/$/, '');
+
+		if (!window.location.hash) {
+			window.history.replaceState(null, '', `${basePath}/#/`);
+		}
+
+		const {Router, Route} = await import('../../dist/router.esm.js');
+		const routePrefix = `${basePath}/#`;
+		const linkTo = function (routePath) {
+			return `${routePrefix}${routePath}`;
+		};
+
+		function DemoHeader() {
+			return h('header', {class: 'demo-header'}, [
+				h('div', {}, [
+					h('h1', {class: 'demo-title'}, 'hashMode route'),
+					h('p', {class: 'demo-intro'}, 'This demo keeps the original hash-router behavior: the hash is part of the route that selects the rendered page.')
+				]),
+				h('div', {class: 'demo-badge'}, 'Hash as route')
+			]);
+		}
+
+		function DemoNav() {
+			return h('nav', {class: 'demo-nav', 'aria-label': 'Hash route demo navigation'}, [
+				h('a', {href: linkTo('/')}, 'Home'),
+				h('a', {href: linkTo('/courses/')}, 'Courses'),
+				h('a', {href: linkTo('/courses/intro/')}, 'Course detail')
+			]);
+		}
+
+		function Layout({children}) {
+			return h('main', {class: 'demo-shell'}, [
+				h(DemoHeader),
+				h(DemoNav),
+				children
+			]);
+		}
+
+		function HomePage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Home route'),
+				h('p', {}, 'The route below is matched because the router receives the pathname plus the hash fragment.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function CoursesPage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Courses route'),
+				h('p', {}, 'Use the navigation above and watch the URL change after #. No page reload is needed.'),
+				h('ul', {class: 'demo-list'}, [
+					h('li', {}, [h('strong', {}, 'Route'), '/courses/']),
+					h('li', {}, [h('strong', {}, 'Prefix'), routePrefix]),
+					h('li', {}, [h('strong', {}, 'Mode'), 'route'])
+				])
+			]));
+		}
+
+		function CourseDetailPage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Course detail route'),
+				h('p', {}, 'The screen is selected by the hash path itself, so #/courses/intro/ is not treated as a DOM anchor.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function NotFoundPage() {
+			return h(Layout, {}, h('section', {class: 'demo-panel'}, [
+				h('h2', {}, 'Route not found'),
+				h('p', {}, 'The current hash route does not match any configured demo route.'),
+				h('code', {class: 'demo-url'}, window.location.href)
+			]));
+		}
+
+		function App() {
+			return h(Router, {prefix: routePrefix, hashMode: 'route', fallback: NotFoundPage}, [
+				h(Route, {path: '/', component: HomePage}),
+				h(Route, {path: '/courses/', component: CoursesPage}),
+				h(Route, {path: '/courses/intro/', component: CourseDetailPage})
+			]);
+		}
+
+		render(h(App), document.getElementById('app'));
+	</script>
+</body>
+</html>
