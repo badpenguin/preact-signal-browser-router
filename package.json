@@ -1,6 +1,6 @@
 {
   "name": "preact-signal-browser-router",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A barebone hash and url router for browsers using preact+signals",
   "type": "module",
   "main": "dist/router.cjs.js",
@@ -16,7 +16,7 @@
   ],
   "author": "Antonio Gallo",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "@preact/signals": "^2.0.0",
     "preact": ">=10.25.0"
   },
@@ -32,6 +32,8 @@
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "@preact/signals": "^2.0.0",
+    "preact": ">=10.25.0",
     "rollup": "^4.18.0"
   }
 }

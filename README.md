@@ -14,7 +14,7 @@ It is very simple.
 
 ## CDN via jsDelivr
 
-2026-06-19: the Git tag is `v3.0.1`, but jsDelivr exposes GitHub versions without the `v` prefix.
+2026-06-27: the Git tag is `v3.0.2`, but jsDelivr exposes GitHub versions without the `v` prefix.
 Use the versioned CDN URL:
 
 ```html
@@ -34,7 +34,7 @@ Use the versioned CDN URL:
         routeBackWithoutHash,
         getRouterParams,
         isCurrentRoute
-    } from 'https://cdn.jsdelivr.net/gh/badpenguin/preact-signal-browser-router@3.0.1/router.js';
+    } from 'https://cdn.jsdelivr.net/gh/badpenguin/preact-signal-browser-router@3.0.2/router.js';
 </script>
 ```
 
@@ -274,6 +274,20 @@ function openComment(postId, commentId) {
 
 The route renders `/post/*`; the hash is kept in the URL and, with
 `observeMissingHashTargets={true}`, the router scrolls when `id="comment-123"` appears.
+
+## v3.0.2 additions
+
+2026-06-27: v3.0.2 fixes direct deep-links for History API apps that mount the anchor Router after an application bootstrap step, such as session loading.
+
+- In `hashMode="anchor"`, the Router now re-runs the existing hash resolver when it mounts with a current URL hash.
+- This uses the same `scrollToHashTarget()` path as `route()`, `routeReplace()`, `load`, `pageshow`, and `hashchange`.
+- If the target is still missing and `observeMissingHashTargets={true}` is enabled, the existing `MutationObserver` pending-target flow is used.
+- This covers URLs opened directly, for example `/app/post/10/#comment-123`, when the DOM target appears only after async app data is rendered.
+
+Example:
+```jsx
+<${Router} prefix="/app" hashMode="anchor" observeMissingHashTargets=${true}>
+```
 
 ## v3.0.1 additions
 

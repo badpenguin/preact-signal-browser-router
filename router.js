@@ -8,6 +8,7 @@
  * - 2026-06-01: observeSearch abilita render su cambio query string senza cambiare il matching delle route.
  * - 2026-06-02: gestione opzionale degli hash come ancore DOM tramite hashMode="anchor".
  * - 2026-06-19: hashMode mantiene compatibile il routing hash storico e rende opt-in il comportamento anchor usato dalle app con History API.
+ * - 2026-06-27: il Router anchor risolve anche deep-link aperti prima del mount applicativo reale.
  */
 import {signal} from '@preact/signals';
 import {h, toChildArray} from 'preact';
@@ -39,6 +40,7 @@ let observeMissingHashTargets = false;
 let pendingHashObserver = null;
 let pendingHashTimeout = null;
 let pendingHashTargetId = '';
+let lastRouterAnchorPath = '';
 const pendingHashTimeoutMs = 15000;
 
 const updatePath = () => {
@@ -232,6 +234,16 @@ const Router = ({
 	currentHashMode = normalizeHashMode(hashMode);
 	scrollHashOnPopState = isAnchorHashMode() && nextScrollHashOnPopState;
 	observeMissingHashTargets = isAnchorHashMode() && nextObserveMissingHashTargets;
+
+	/*
+	 * 2026-06-27: se il Router anchor viene montato dopo il bootstrap applicativo,
+	 * load/pageshow sono gia' passati; rilanciamo il resolver hash esistente una sola volta per path.
+	 */
+	if (isAnchorHashMode() && getHashTargetId(currentPath.value) && lastRouterAnchorPath !== currentPath.value) {
+		lastRouterAnchorPath = currentPath.value;
+		scrollToHashTarget(currentPath.value);
+	}
+
 	const search = observeSearch ? currentSearch.value : '';
 
 	const childArray = toChildArray(children);
