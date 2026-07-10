@@ -1,11 +1,12 @@
 {
   "name": "preact-signal-browser-router",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "A barebone hash and url router for browsers using preact+signals",
   "type": "module",
   "main": "dist/router.cjs.js",
   "module": "dist/router.esm.js",
   "browser": "dist/router.umd.js",
+  "types": "router.d.ts",
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run build"
